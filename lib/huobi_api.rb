@@ -1,10 +1,11 @@
-require 'huobi_api/version'
-require 'huobi_api/client'
+require "huobi_api/version"
+require "huobi_api/client"
 
 module HuobiApi
   @key = nil
   @secret = nil
-  @accout_id = nil
+  @account_id = nil
+  @headers = nil
 
   def self.key=(key)
     @key = key
@@ -28,6 +29,14 @@ module HuobiApi
 
   def self.account_id
     @account_id
+  end
+
+  def self.headers=(headers)
+    @headers = headers
+  end
+
+  def self.headers
+    @headers
   end
 
   # configure like

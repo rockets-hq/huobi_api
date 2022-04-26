@@ -1,19 +1,18 @@
-require 'base64'
-require 'rack'
-require 'openssl'
-require 'net/http'
-require 'json'
+require "base64"
+require "rack"
+require "openssl"
+require "net/http"
+require "json"
 
 module HuobiApi
   module Network
-
-    BASE_URL='https://api.huobi.pro'.freeze
-    SIGNATURE_VERSION=2
-    HEADERS={
-      'Content-Type'=> 'application/json',
-      'Accept' => 'application/json',
-      'Accept-Language' => 'en-GB',
-    }.freeze
+    BASE_URL = "https://api.huobi.pro".freeze
+    SIGNATURE_VERSION = 2
+    HEADERS = {
+      "Content-Type" => "application/json",
+      "Accept" => "application/json",
+      "Accept-Language" => "en-GB",
+    }
 
     def post(endpoint, data)
       request(endpoint, :POST, data)
@@ -28,6 +27,8 @@ module HuobiApi
       http = Net::HTTP.new(uri.host, uri.port)
       http.use_ssl = true
 
+      HEADERS.merge!(HuobiApi.headers) if HuobiApi.headers
+
       # Stringify keys
       data = Hash[data.map { |key, value| [key.to_s, value] }]
 
@@ -37,19 +38,19 @@ module HuobiApi
       begin
         JSON.parse http.send_request(method, url, JSON.dump(data), HEADERS).body
       rescue Net::HTTPExceptions => e
-        {"message" => 'error' ,"request_error" => e.message}
+        { "message" => "error", "request_error" => e.message }
       rescue JSON::ParserError => e
-        {"message" => 'error' ,"request_error" => e.message}
+        { "message" => "error", "request_error" => e.message }
       end
     end
 
     def build_params(endpoint, method, data)
       # things huobi want you to send (and sign)
       params = {
-        'AccessKeyId' => HuobiApi.key,
-        'SignatureMethod' => 'HmacSHA256',
-        'SignatureVersion' => SIGNATURE_VERSION,
-        'Timestamp' => Time.now.getutc.strftime("%Y-%m-%dT%H:%M:%S")
+        "AccessKeyId" => HuobiApi.key,
+        "SignatureMethod" => "HmacSHA256",
+        "SignatureVersion" => SIGNATURE_VERSION,
+        "Timestamp" => Time.now.getutc.strftime("%Y-%m-%dT%H:%M:%S"),
       }
 
       # add in what we're sending, if it's a get request
@@ -63,17 +64,17 @@ module HuobiApi
       # now sign in
       sig = sign(to_sign)
       # and mash it into the params
-      params['Signature'] = sig
+      params["Signature"] = sig
 
       params
     end
 
     def sign(data)
-      Base64.encode64(OpenSSL::HMAC.digest('sha256', HuobiApi.secret, data)).gsub("\n","")
+      Base64.encode64(OpenSSL::HMAC.digest("sha256", HuobiApi.secret, data)).gsub("\n", "")
     end
 
     def hash_sort(ha)
-      Hash[ha.sort_by{ |k, _| k }]
+      Hash[ha.sort_by { |k, _| k }]
     end
   end
 end
